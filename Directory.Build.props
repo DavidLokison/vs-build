@@ -1,0 +1,64 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <VintageStory Condition="'$(CI)' == 'true'"></VintageStory>
+    <VintageStory Condition="'$(VintageStory)' == ''">$(VINTAGE_STORY)</VintageStory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="VintagestoryAPI">
+      <HintPath>$(VintageStory)/VintagestoryAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VSSurvivalMod">
+      <HintPath>$(VintageStory)/Mods/VSSurvivalMod.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VSEssentials">
+      <HintPath>$(VintageStory)/Mods/VSEssentials.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VSCreativeMod">
+      <HintPath>$(VintageStory)/Mods/VSCreativeMod.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(VintageStory)/Lib/Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(VintageStory)/Lib/0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VintagestoryLib">
+      <HintPath>$(VintageStory)/VintagestoryLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>$(VintageStory)/Lib/protobuf-net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="cairo-sharp">
+      <HintPath>$(VintageStory)/Lib/cairo-sharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Data.Sqlite">
+      <HintPath>$(VintageStory)/Lib/Microsoft.Data.Sqlite.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="modinfo.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="assets/**" Condition="Exists('assets')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="modicon.png" Condition="Exists('modicon.png')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
