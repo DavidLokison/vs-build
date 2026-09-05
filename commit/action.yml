@@ -8,6 +8,8 @@ inputs:
   version:
     description: 'SemVer format release tag'
     required: true
+  changelog-path:
+    description: 'Path to the CHANGELOG.md file'
 outputs:
   commit:
     description: 'Commit Hash'
@@ -27,7 +29,9 @@ runs:
     - name: Checkout
       uses: actions/checkout@v7
       with:
-        sparse-checkout: modinfo.json
+        sparse-checkout: |
+          modinfo.json
+          ${{ inputs.changelog-path }}
         sparse-checkout-cone-mode: false
     - name: Update Version Tag
       id: update
@@ -38,6 +42,22 @@ runs:
         echo "modid=$(jq -r .modid modinfo.json)" >> "$GITHUB_OUTPUT"
         echo "name=$(jq -r .name modinfo.json)" >> "$GITHUB_OUTPUT"
         echo "tag=v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+    - name: Fetch Date
+      id: date
+      if: inputs.changelog-path != ''
+      shell: bash
+      run: echo "date=$(date -I)" >> "$GITHUB_OUTPUT"
+    - name: Update CHANGELOG.md
+      if: inputs.changelog-path != ''
+      shell: bash
+      run: |
+        sed -E -e '/^## \[Unreleased]$/a\\n## [${{ env.version }}] - ${{ env.date }}' -e 's/^\[(Unreleased)](: .*\/)([^\/]*)\.\.\.HEAD$/[\1]\2${{ env.tag }}...HEAD\n[${{ env.version }}]\2\3...${{ env.tag }}/' -i ${{ env.file }}
+        git add ${{ env.file }}
+      env:
+        date: ${{ steps.date.outputs.date }}
+        file: ${{ inputs.changelog-path }}
+        tag: ${{ steps.update.outputs.tag }}
+        version: ${{ inputs.version }}
     - name: Commit Version Changes
       id: commit
       uses: qoomon/actions--create-commit@v1
