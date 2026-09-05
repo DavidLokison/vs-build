@@ -1,0 +1,55 @@
+name: 'Build Vintage Story Mod'
+description: >
+  Build a mod project for Vintage Story and upload a zipped artifact. To download
+  the zipfile in a later action you can use the [Download a Build Artifact Action](https://github.com/marketplace/actions/download-a-build-artifact)
+  and specify `skip-decompress: true`. This will get you the actual file to
+  upload to a release candidate or to VS Mod database instead of unpacking
+  it again into loose files.
+outputs:
+  artifact-name:
+    description: >
+      Base name of the produced artifact. Takes the `modid` and `version`
+      of the modinfo.json to create a unique identifier.
+    value: ${{ steps.build.outputs.name }}
+  artifact-id:
+    description: 'GitHub ID of the produced artifact'
+    value: ${{ steps.upload.outputs.artifact-id }}
+  artifact-url:
+    description: 'URL to download the produced artifact'
+    value: ${{ steps.upload.outputs.artifact-url }}
+  artifact-digest:
+    description: 'SHA-256 of the produced artifact'
+    value: ${{ steps.upload.outputs.artifact-digest }}
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch Modinfo Metadata
+      id: modinfo
+      shell: bash
+      run: |
+        echo "game_version=$(jq -r .dependencies.game modinfo.json)" >> "$GITHUB_OUTPUT"
+        echo "modid=$(jq -r .modid modinfo.json)" >> "$GITHUB_OUTPUT"
+        echo "version=$(jq -r .version modinfo.json)" >> "$GITHUB_OUTPUT"
+        echo "type=client" >> "$GITHUB_OUTPUT" # TODO still have to figure out how to make server-side mods use the server executable only
+    - name: Download Vintage Story
+      shell: bash
+      working-directory: ${{ env.RUNNER_TEMP }}
+      run: curl -fSL "${{ env.VS_URL }}/${{ env.VS_TARGET }}" | tar -xz
+      env:
+        VS_URL: https://cdn.vintagestory.at/gamefiles/stable
+        VS_TARGET: vs_${{ steps.modinfo.outputs.type }}_linux-x64_${{ steps.modinfo.outputs.game_version }}.tar.gz
+    - name: Build Project
+      id: build
+      shell: bash
+      run: |
+        dotnet build -c Release -p:DirectoryBuildPropsPath=$GITHUB_ACTION_PATH/Directory.Build.props -p:CI=true
+        echo "name=${{ steps.modinfo.outputs.modid }}_${{ steps.modinfo.outputs.version }}" >> "$GITHUB_OUTPUT"
+    - name: Upload Artifact
+      id: upload
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ steps.build.outputs.name }}
+        path: |
+          bin/Release/
+          !bin/Release/*.pdb
+          !bin/Release/*.deps.json

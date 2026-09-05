@@ -1,0 +1,48 @@
+name: 'Create Vintage Story Mod Project Release Commit'
+description: >
+  Update modinfo.json with the specified version and create a release commit.
+
+  The output also includes a list of helpful parameters extracted from the
+  modinfo which might be useful when assembling a following release draft.
+inputs:
+  version:
+    description: 'SemVer format release tag'
+    required: true
+outputs:
+  commit:
+    description: 'Commit Hash'
+    value: ${{ steps.commit.outputs.commit }}
+  project-modid:
+    description: 'Mod ID of the project as extracted from the modinfo'
+    value: ${{ steps.update.outputs.modid }}
+  project-name:
+    description: 'Name of the mod project as extracted from the modinfo'
+    value: ${{ steps.update.outputs.name }}
+  project-tag:
+    description: 'Release tag of the mod project assembled from the input version'
+    value: ${{ steps.update.outputs.tag }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        sparse-checkout: modinfo.json
+        sparse-checkout-cone-mode: false
+    - name: Update Version Tag
+      id: update
+      shell: bash
+      run: |
+        sed -i 's/^  "version": ".*",$/  "version": "${{ inputs.version }}",/' modinfo.json
+        git add modinfo.json
+        echo "modid=$(jq -r .modid modinfo.json)" >> "$GITHUB_OUTPUT"
+        echo "name=$(jq -r .name modinfo.json)" >> "$GITHUB_OUTPUT"
+        echo "tag=v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+    - name: Commit Version Changes
+      id: commit
+      uses: qoomon/actions--create-commit@v1
+      with:
+        message: "release: ${{ steps.update.outputs.tag }}"
+    - name: Push Commit
+      shell: bash
+      run: git push
