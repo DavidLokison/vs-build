@@ -18,8 +18,8 @@ outputs:
     description: 'URL to download the produced artifact'
     value: ${{ steps.upload.outputs.artifact-url }}
   artifact-digest:
-    description: 'SHA-256 of the produced artifact'
-    value: ${{ steps.upload.outputs.artifact-digest }}
+    description: 'Attestation digest of the produced artifact'
+    value: sha256:${{ steps.upload.outputs.artifact-digest }}
 runs:
   using: "composite"
   steps:
