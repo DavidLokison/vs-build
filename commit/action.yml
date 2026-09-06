@@ -23,6 +23,9 @@ outputs:
   project-tag:
     description: 'Release tag of the mod project assembled from the input version'
     value: ${{ steps.update.outputs.tag }}
+  project-version:
+    description: 'Release version of the mod project assembled from the input version'
+    value: ${{ inputs.version }}
 runs:
   using: "composite"
   steps:
